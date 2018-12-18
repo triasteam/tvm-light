@@ -1,6 +1,7 @@
 package contract
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os/exec"
@@ -20,17 +21,19 @@ type Contract struct {
 }
 
 const (
-	CMD_PEER = "peer"
+	CMD_DOCKER = "docker"
 )
-var docker_command []string = []string{"docker","exec","cli"}
+
+var docker_command []string = []string{"exec", "cli"}
 
 func NewContract(peerAddress string, contractName string, contractType string, contractPath string, contractVersion string, channelID string, orgName string, args string, action string) *Contract {
 	return &Contract{peerAddress: peerAddress, contractName: contractName, contractType: contractType, contractPath: contractPath, contractVersion: contractVersion, channelID: channelID, orgName: orgName, args: args, action: action}
 }
 
 func (c *Contract) InstallContract() error {
-	params := []string{"chaincode", "install", "-n", c.contractName, "-p", c.contractPath, "-v", c.contractVersion};
-	cmd := exec.Command(CMD_PEER, append(docker_command,params...)...);
+	var filePath string = tvm_conf.GetDockerPath() + c.contractPath[len(tvm_conf.GetContractPath()):];
+	params := []string{"peer", "chaincode", "install", "-n", c.contractName, "-p", filePath, "-v", c.contractVersion};
+	cmd := exec.Command(CMD_DOCKER, append(docker_command, params...)...);
 	// 获取输出对象，可以从该对象中读取输出结果
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -40,6 +43,7 @@ func (c *Contract) InstallContract() error {
 	// 保证关闭输出流
 	defer stdout.Close()
 	// 运行命令
+	fmt.Println(cmd.Args)
 	if err := cmd.Start(); err != nil {
 		log.Fatal(err)
 		return err
@@ -51,6 +55,7 @@ func (c *Contract) InstallContract() error {
 		return err
 	}
 	log.Println(string(opBytes))
+	cmd.Wait()
 	return nil;
 }
 
@@ -69,8 +74,8 @@ func (c *Contract) RunContract() ([]byte, error) {
 }
 
 func (c *Contract) instantiate() ([]byte, error) {
-	params := []string{"chaincode", "instantiate", "-o", tvm_conf.OrderServer, "-C", c.channelID, "-n", c.contractName, "-v", c.contractVersion, "-c", c.args};
-	cmd := exec.Command(CMD_PEER, append(docker_command,params...)...);
+	params := []string{"peer", "chaincode", "instantiate", "-o", tvm_conf.GetOrderServer(), "-C", c.channelID, "-n", c.contractName, "-v", c.contractVersion, "-c", c.args};
+	cmd := exec.Command(CMD_DOCKER, append(docker_command, params...)...);
 	// 获取输出对象，可以从该对象中读取输出结果
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -80,6 +85,7 @@ func (c *Contract) instantiate() ([]byte, error) {
 	// 保证关闭输出流
 	defer stdout.Close()
 	// 运行命令
+	fmt.Println(cmd.Args)
 	if err := cmd.Start(); err != nil {
 		log.Fatal(err)
 		return nil, err
@@ -90,13 +96,14 @@ func (c *Contract) instantiate() ([]byte, error) {
 		log.Fatal(err)
 		return nil, err
 	}
+	cmd.Wait()
 	return opBytes, err;
 }
 
 func (c *Contract) execute() ([]byte, error) {
 	// peer chaincode $action -C $channelID -n $cname -c $args
-	params := []string{"chaincode", c.action, "-C", c.channelID, "-n", c.contractName, "-c", c.args};
-	cmd := exec.Command(CMD_PEER, append(docker_command,params...)...);
+	params := []string{"peer", "chaincode", c.action, "-C", c.channelID, "-n", c.contractName, "-c", c.args};
+	cmd := exec.Command(CMD_DOCKER, append(docker_command, params...)...);
 	// 获取输出对象，可以从该对象中读取输出结果
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -106,6 +113,7 @@ func (c *Contract) execute() ([]byte, error) {
 	// 保证关闭输出流
 	defer stdout.Close()
 	// 运行命令
+	fmt.Println(cmd.Args)
 	if err := cmd.Start(); err != nil {
 		log.Fatal(err)
 		return nil, err
@@ -116,5 +124,6 @@ func (c *Contract) execute() ([]byte, error) {
 		log.Fatal(err)
 		return nil, err
 	}
+	cmd.Wait()
 	return opBytes, err
 }

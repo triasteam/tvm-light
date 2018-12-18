@@ -3,10 +3,10 @@ package trans
 import (
 	"fmt"
 	"golang.org/x/net/context"
-	enConf "triasVM/config"
-	t_utils "triasVM/utils"
+	enConf "tvm-light/config"
 	"tvm-light/contract"
 	"tvm-light/proto/tm"
+	t_utils "tvm-light/utils"
 	"tvm-light/validate"
 )
 
@@ -15,7 +15,6 @@ func NewMWService() *server {
 }
 
 const (
-	pathPrefix = "./source/contract/"
 	fileSuffix = ".go"
 )
 
@@ -30,15 +29,16 @@ func (serv *server) ExecuteContract(ctx context.Context, request *tm.ExecuteCont
 		return returnErrorResponse(err);
 	}
 	// TODO CheckContract is install
-	var filePath = pathPrefix + request.GetContractName() + fileSuffix;
-	isExists, err := t_utils.PathExists(filePath);
+	var filePath = enConf.GetContractPath() + "/" + request.GetUser() + "/" + request.GetAddress() + "/";
+	var fileName = request.GetContractName() + fileSuffix;
+	isExists, err := t_utils.PathExists(filePath + fileName);
 	if err != nil {
 		fmt.Println("checkFilePathFails", err);
 		return returnErrorResponse(err);
 	}
-	contract := contract.NewContract(enConf.PeerAddress, request.GetContractName(), request.GetContractType(), filePath, enConf.ContractVersion, enConf.ChannelID, enConf.OrdererOrgName, request.GetCommand(), request.GetOpration());
+	contract := contract.NewContract(enConf.GetOrderServer(), request.GetContractName(), request.GetContractType(), filePath, request.GetContractVersion(), enConf.GetChannelID(), enConf.GetOrdererOrgName(), "'"+request.GetCommand()+"'", request.GetOperation());
 	if !isExists {
-		err := t_utils.FileDownLoad(filePath, request.GetAddress());
+		err := t_utils.FileDownLoad(filePath, fileName, enConf.GetIPFSAddress()+request.GetAddress());
 		if err != nil {
 			fmt.Println("Download contract happens a error", err);
 			return returnErrorResponse(err);
@@ -69,7 +69,7 @@ func returnErrorResponse(err error) (*tm.ExecuteContractResponse) {
 	resp := &tm.ExecuteContractResponse{
 		Code:    0,
 		Data:    err.Error(),
-		Message: "faile",
+		Message: "fail",
 	}
 	return resp;
 }

@@ -11,12 +11,13 @@ message ExecuteContractRequest {
     string command = 3;
     string contractName = 4;
     string contractType = 5;
-    string vmVersion = 6;
-    string sequence = 7;
-    int64 timestamp = 8;
-    string user = 9;
-    string signature = 10;
-    string opration = 11;
+    string contractVersion = 6;
+    string vmVersion = 7;
+    string sequence = 8;
+    int64 timestamp = 9;
+    string user = 10;
+    string signature = 11;
+    string operation = 12;
 }
 
 message ExecuteContractResponse {
