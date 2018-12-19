@@ -20,6 +20,11 @@ type Contract struct {
 	action          string
 }
 
+type Args struct {
+	Args interface{} `json:"Args"`
+}
+
+// {\"Args\":[\"query\",\"a\"]}
 const (
 	CMD_DOCKER = "docker"
 )
@@ -30,33 +35,34 @@ func NewContract(peerAddress string, contractName string, contractType string, c
 	return &Contract{peerAddress: peerAddress, contractName: contractName, contractType: contractType, contractPath: contractPath, contractVersion: contractVersion, channelID: channelID, orgName: orgName, args: args, action: action}
 }
 
-func (c *Contract) InstallContract() error {
+func (c *Contract) InstallContract() ([]byte,error) {
 	var filePath string = tvm_conf.GetDockerPath() + c.contractPath[len(tvm_conf.GetContractPath()):];
 	params := []string{"peer", "chaincode", "install", "-n", c.contractName, "-p", filePath, "-v", c.contractVersion};
 	cmd := exec.Command(CMD_DOCKER, append(docker_command, params...)...);
 	// 获取输出对象，可以从该对象中读取输出结果
 	stdout, err := cmd.StdoutPipe()
+	stderrOut, err := cmd.StderrPipe()
 	if err != nil {
-		log.Fatal(err)
-		return err
+		return nil,err
 	}
 	// 保证关闭输出流
 	defer stdout.Close()
+	defer stderrOut.Close()
 	// 运行命令
 	fmt.Println(cmd.Args)
 	if err := cmd.Start(); err != nil {
-		log.Fatal(err)
-		return err
+		return nil,err
 	}
 	// 读取输出结果
 	opBytes, err := ioutil.ReadAll(stdout)
+	errBytes, err := ioutil.ReadAll(stderrOut)
 	if err != nil {
-		log.Fatal(err)
-		return err
+		return nil,err
 	}
-	log.Println(string(opBytes))
+	fmt.Println(string(errBytes))
+	fmt.Println(string(opBytes))
 	cmd.Wait()
-	return nil;
+	return opBytes,nil;
 }
 
 func (c *Contract) RunContract() ([]byte, error) {
@@ -66,6 +72,8 @@ func (c *Contract) RunContract() ([]byte, error) {
 	case "instantiate":
 		return c.instantiate()
 		break;
+	case "install":
+		return c.InstallContract()
 	default:
 		return c.execute()
 		break;
@@ -78,12 +86,14 @@ func (c *Contract) instantiate() ([]byte, error) {
 	cmd := exec.Command(CMD_DOCKER, append(docker_command, params...)...);
 	// 获取输出对象，可以从该对象中读取输出结果
 	stdout, err := cmd.StdoutPipe()
+	stderrOut, err := cmd.StderrPipe()
 	if err != nil {
 		log.Fatal(err)
 		return nil, err
 	}
 	// 保证关闭输出流
 	defer stdout.Close()
+	defer stderrOut.Close()
 	// 运行命令
 	fmt.Println(cmd.Args)
 	if err := cmd.Start(); err != nil {
@@ -92,11 +102,14 @@ func (c *Contract) instantiate() ([]byte, error) {
 	}
 	// 读取输出结果
 	opBytes, err := ioutil.ReadAll(stdout)
+	errBytes, err := ioutil.ReadAll(stderrOut)
 	if err != nil {
 		log.Fatal(err)
 		return nil, err
 	}
 	cmd.Wait()
+	fmt.Println(string(errBytes))
+	fmt.Println(string(opBytes))
 	return opBytes, err;
 }
 
@@ -106,12 +119,14 @@ func (c *Contract) execute() ([]byte, error) {
 	cmd := exec.Command(CMD_DOCKER, append(docker_command, params...)...);
 	// 获取输出对象，可以从该对象中读取输出结果
 	stdout, err := cmd.StdoutPipe()
+	stderrOut, err := cmd.StderrPipe()
 	if err != nil {
 		log.Fatal(err)
 		return nil, err
 	}
 	// 保证关闭输出流
 	defer stdout.Close()
+	defer stderrOut.Close()
 	// 运行命令
 	fmt.Println(cmd.Args)
 	if err := cmd.Start(); err != nil {
@@ -120,6 +135,11 @@ func (c *Contract) execute() ([]byte, error) {
 	}
 	// 读取输出结果
 	opBytes, err := ioutil.ReadAll(stdout)
+
+	errBytes, err := ioutil.ReadAll(stderrOut)
+
+	fmt.Println(string(errBytes))
+	fmt.Println(string(opBytes))
 	if err != nil {
 		log.Fatal(err)
 		return nil, err

@@ -17,7 +17,7 @@ type TVMconf struct {
 var triasConfig = TVMconf{}
 
 func init() {
-	data, _ := ioutil.ReadFile("config.yml")
+	data, _ := ioutil.ReadFile("/home/Polarbear/workGo/src/tvm-light/config.yml")
 	yaml.Unmarshal(data, &triasConfig)
 }
 

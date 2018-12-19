@@ -36,20 +36,17 @@ func (serv *server) ExecuteContract(ctx context.Context, request *tm.ExecuteCont
 		fmt.Println("checkFilePathFails", err);
 		return returnErrorResponse(err);
 	}
-	contract := contract.NewContract(enConf.GetOrderServer(), request.GetContractName(), request.GetContractType(), filePath, request.GetContractVersion(), enConf.GetChannelID(), enConf.GetOrdererOrgName(), "'"+request.GetCommand()+"'", request.GetOperation());
+	contract := contract.NewContract(enConf.GetOrderServer(), request.GetContractName(), request.GetContractType(), filePath, request.GetContractVersion(), enConf.GetChannelID(), enConf.GetOrdererOrgName(), request.GetCommand(), request.GetOperation());
 	if !isExists {
 		err := t_utils.FileDownLoad(filePath, fileName, enConf.GetIPFSAddress()+request.GetAddress());
 		if err != nil {
 			fmt.Println("Download contract happens a error", err);
 			return returnErrorResponse(err);
 		}
-		installErr := contract.InstallContract();
-		if installErr != nil {
-
-			return returnErrorResponse(err);
-		}
 	}
-
+	if _, err := t_utils.CheckFileMD5(filePath+fileName, request.GetCheckMD5()); err != nil {
+		return returnErrorResponse(err);
+	}
 	cresp, err := contract.RunContract()
 	if err != nil {
 		fmt.Println("Failed to run contract", err);
