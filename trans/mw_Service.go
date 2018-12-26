@@ -29,7 +29,7 @@ func (serv *server) ExecuteContract(ctx context.Context, request *tm.ExecuteCont
 		return returnErrorResponse(err);
 	}
 	// TODO CheckContract is install
-	var filePath = enConf.GetContractPath() + "/" + request.GetUser() + "/" + request.GetAddress() + "/";
+	var filePath = enConf.GetContractPath() + "/" + request.GetUser() + "/" + request.GetAddress() + "/"+ request.GetContractName() + "/";
 	var fileName = request.GetContractName() + fileSuffix;
 	isExists, err := t_utils.PathExists(filePath + fileName);
 	if err != nil {
@@ -55,7 +55,7 @@ func (serv *server) ExecuteContract(ctx context.Context, request *tm.ExecuteCont
 
 	resp := &tm.ExecuteContractResponse{
 		Code:    1,
-		Data:    string(cresp),
+		Data:    cresp,
 		Message: "success",
 	}
 
@@ -64,7 +64,7 @@ func (serv *server) ExecuteContract(ctx context.Context, request *tm.ExecuteCont
 
 func returnErrorResponse(err error) (*tm.ExecuteContractResponse) {
 	resp := &tm.ExecuteContractResponse{
-		Code:    0,
+		Code:    -1,
 		Data:    err.Error(),
 		Message: "fail",
 	}

@@ -12,12 +12,14 @@ type TVMconf struct {
 	OrdererOrgName string `yaml:"ordererOrgName"`
 	IPFSAddress    string `yaml:"IPFSAddress"`
 	DockerPath     string `yaml:"dockerPath"`
+	Port           string `yml:"port"`
 }
 
 var triasConfig = TVMconf{}
 
 func init() {
-	data, _ := ioutil.ReadFile("/home/Polarbear/workGo/src/tvm-light/config.yml")
+	var filePath = "/opt/gopath/src/tvm-light/config.yml"
+	data, _ := ioutil.ReadFile(filePath)
 	yaml.Unmarshal(data, &triasConfig)
 }
 
@@ -44,3 +46,6 @@ func GetDockerPath() string {
 	return triasConfig.DockerPath
 }
 
+func GetPort() string {
+	return triasConfig.Port
+}

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"tvm-light/proto/tm"
 	t_server "tvm-light/trans"
+	t_conf "tvm-light/config"
 )
 
 func executeContract(writer http.ResponseWriter, request *http.Request) {
@@ -26,7 +27,8 @@ func executeContract(writer http.ResponseWriter, request *http.Request) {
 
 func main() {
 	http.HandleFunc("/executeContract", executeContract)
-	err := http.ListenAndServe(":8088", nil)
+	fmt.Println(t_conf.GetPort())
+	err := http.ListenAndServe(":"+t_conf.GetPort(), nil)
 	if err != nil {
 		fmt.Println(err)
 	}

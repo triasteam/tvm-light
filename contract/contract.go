@@ -2,9 +2,10 @@ package contract
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"io/ioutil"
-	"log"
 	"os/exec"
+	"strings"
 	tvm_conf "tvm-light/config"
 )
 
@@ -35,94 +36,52 @@ func NewContract(peerAddress string, contractName string, contractType string, c
 	return &Contract{peerAddress: peerAddress, contractName: contractName, contractType: contractType, contractPath: contractPath, contractVersion: contractVersion, channelID: channelID, orgName: orgName, args: args, action: action}
 }
 
-func (c *Contract) InstallContract() ([]byte,error) {
-	var filePath string = tvm_conf.GetDockerPath() + c.contractPath[len(tvm_conf.GetContractPath()):];
-	params := []string{"peer", "chaincode", "install", "-n", c.contractName, "-p", filePath, "-v", c.contractVersion};
-	cmd := exec.Command(CMD_DOCKER, append(docker_command, params...)...);
-	// 获取输出对象，可以从该对象中读取输出结果
-	stdout, err := cmd.StdoutPipe()
-	stderrOut, err := cmd.StderrPipe()
-	if err != nil {
-		return nil,err
-	}
-	// 保证关闭输出流
-	defer stdout.Close()
-	defer stderrOut.Close()
-	// 运行命令
-	fmt.Println(cmd.Args)
-	if err := cmd.Start(); err != nil {
-		return nil,err
-	}
-	// 读取输出结果
-	opBytes, err := ioutil.ReadAll(stdout)
-	errBytes, err := ioutil.ReadAll(stderrOut)
-	if err != nil {
-		return nil,err
-	}
-	fmt.Println(string(errBytes))
-	fmt.Println(string(opBytes))
-	cmd.Wait()
-	return opBytes,nil;
-}
 
-func (c *Contract) RunContract() ([]byte, error) {
+func (c *Contract) RunContract() (string, error) {
 
-	var resp []byte;
+	var resp string;
+	var err error = nil;
 	switch c.action {
 	case "instantiate":
-		return c.instantiate()
+		resp,err = c.instantiate()
 		break;
 	case "install":
-		return c.InstallContract()
+		resp,err =  c.InstallContract()
 	default:
-		return c.execute()
+		resp,err =  c.execute()
 		break;
 	}
-	return resp, nil;
+	return resp,err;
 }
 
-func (c *Contract) instantiate() ([]byte, error) {
+
+func (c *Contract) InstallContract() (string,error) {
+	var filePath string = tvm_conf.GetDockerPath() + c.contractPath[len(tvm_conf.GetContractPath()):];
+	fmt.Println("dockerPath:",tvm_conf.GetDockerPath())
+	params := []string{"peer", "chaincode", "install", "-n", c.contractName, "-p", filePath, "-v", c.contractVersion};
+	return runCommand(params);
+}
+
+func (c *Contract) instantiate() (string, error) {
 	params := []string{"peer", "chaincode", "instantiate", "-o", tvm_conf.GetOrderServer(), "-C", c.channelID, "-n", c.contractName, "-v", c.contractVersion, "-c", c.args};
-	cmd := exec.Command(CMD_DOCKER, append(docker_command, params...)...);
-	// 获取输出对象，可以从该对象中读取输出结果
-	stdout, err := cmd.StdoutPipe()
-	stderrOut, err := cmd.StderrPipe()
-	if err != nil {
-		log.Fatal(err)
-		return nil, err
-	}
-	// 保证关闭输出流
-	defer stdout.Close()
-	defer stderrOut.Close()
-	// 运行命令
-	fmt.Println(cmd.Args)
-	if err := cmd.Start(); err != nil {
-		log.Fatal(err)
-		return nil, err
-	}
-	// 读取输出结果
-	opBytes, err := ioutil.ReadAll(stdout)
-	errBytes, err := ioutil.ReadAll(stderrOut)
-	if err != nil {
-		log.Fatal(err)
-		return nil, err
-	}
-	cmd.Wait()
-	fmt.Println(string(errBytes))
-	fmt.Println(string(opBytes))
-	return opBytes, err;
+	return runCommand(params);
 }
 
-func (c *Contract) execute() ([]byte, error) {
+func (c *Contract) execute() (string, error) {
 	// peer chaincode $action -C $channelID -n $cname -c $args
 	params := []string{"peer", "chaincode", c.action, "-C", c.channelID, "-n", c.contractName, "-c", c.args};
-	cmd := exec.Command(CMD_DOCKER, append(docker_command, params...)...);
+	return runCommand(params);
+
+}
+
+func runCommand(param []string)(string, error){
+	cmd := exec.Command(CMD_DOCKER, append(docker_command, param...)...);
 	// 获取输出对象，可以从该对象中读取输出结果
 	stdout, err := cmd.StdoutPipe()
 	stderrOut, err := cmd.StderrPipe()
 	if err != nil {
-		log.Fatal(err)
-		return nil, err
+		fmt.Println(err)
+		return "", err
 	}
 	// 保证关闭输出流
 	defer stdout.Close()
@@ -130,20 +89,34 @@ func (c *Contract) execute() ([]byte, error) {
 	// 运行命令
 	fmt.Println(cmd.Args)
 	if err := cmd.Start(); err != nil {
-		log.Fatal(err)
-		return nil, err
+		fmt.Println(err)
+		return "", err
 	}
 	// 读取输出结果
 	opBytes, err := ioutil.ReadAll(stdout)
-
 	errBytes, err := ioutil.ReadAll(stderrOut)
 
-	fmt.Println(string(errBytes))
-	fmt.Println(string(opBytes))
-	if err != nil {
-		log.Fatal(err)
-		return nil, err
-	}
+	var opString string = string(opBytes)
+	var errString string = string(errBytes)
 	cmd.Wait()
-	return opBytes, err
+	if !strings.EqualFold(opString,"") {
+		fmt.Println(opString)
+		return opString,nil
+	} else {
+		fmt.Println(errString)
+		err = solveErrorResult(errString)
+		if(err != nil){
+			return "install error",err
+		} else {
+			return "",err
+		}
+	}
+}
+
+func solveErrorResult(result string) error{
+	var err error = nil;
+	if(strings.Contains(result,"Error: ")){
+		err = errors.Errorf("Execute contract happens a error!")
+	}
+	return err
 }
