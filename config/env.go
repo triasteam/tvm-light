@@ -17,7 +17,8 @@ type TVMconf struct {
 var triasConfig = TVMconf{}
 
 func init() {
-	data, _ := ioutil.ReadFile("/home/Polarbear/workGo/src/tvm-light/config.yml")
+	var filePath = "/opt/gopath/src/tvm-light/config.yml"
+	data, _ := ioutil.ReadFile(filePath)
 	yaml.Unmarshal(data, &triasConfig)
 }
 
@@ -43,4 +44,3 @@ func GetIPFSAddress() string {
 func GetDockerPath() string {
 	return triasConfig.DockerPath
 }
-
