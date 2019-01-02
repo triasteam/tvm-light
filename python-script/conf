@@ -1,0 +1,13 @@
+[iota]
+addr = http://localhost:14700
+seed = EBZYNR9YVFIOAZUPQOLRZXPPPIKRCJ9EJKVCXMYVLMNOCCOPYPJKCWUZNLJZZZZWTMVQUXZFYLVLZXJ9Q
+
+[tendermint]
+addr = http://localhost:26657
+
+[ipfs]
+ip = localhost
+port = 5001
+
+[tvm]
+addr = http://localhost:8088

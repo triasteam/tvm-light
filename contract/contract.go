@@ -54,7 +54,6 @@ func (c *Contract) RunContract() (string, error) {
 	return resp,err;
 }
 
-
 func (c *Contract) InstallContract() (string,error) {
 	var filePath string = tvm_conf.GetDockerPath() + c.contractPath[len(tvm_conf.GetContractPath()):];
 	fmt.Println("dockerPath:",tvm_conf.GetDockerPath())
