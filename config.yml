@@ -1,0 +1,13 @@
+orderServer: orderer.example.com:7050
+
+contractPath: /trias-contract/
+
+channelID: mychannel
+
+ordererOrgName: Orderer
+
+IPFSAddress: http://127.0.0.1:8080/ipfs/
+
+dockerPath: github.com/hyperledger/fabric/singlepeer/chaincode/go/
+
+port: 8088

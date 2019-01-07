@@ -1,0 +1,6 @@
+curl -X POST \
+  http://127.0.0.1:5000/upload_contract \
+  -H 'cache-control: no-cache' \
+  -H 'content-type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW' \
+  -F contract=@/home/ubuntu/alexander/contract/chaincode_example02.go \
+  -F md5=7a3f59dd79140c6ce5de2d6a6ef5e352
