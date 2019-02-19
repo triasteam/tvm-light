@@ -51,7 +51,7 @@ func main() {
 	http.HandleFunc("/upLoadPackage", upLoadPackage)
 	http.HandleFunc("/asyncTVM", asyncTVM)
 	fmt.Println(t_conf.TriasConfig.Port)
-	err := http.ListenAndServe(":"+t_conf.GetPort(), nil)
+	err := http.ListenAndServe("0.0.0.0:"+t_conf.GetPort(), nil)
 	if err != nil {
 		fmt.Println(err)
 	}

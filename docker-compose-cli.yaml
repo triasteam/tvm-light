@@ -1,8 +1,11 @@
 version: '2'
 
+#networks:
+  #byfn:
+
 services:
-  orderer.example.com:
-    container_name: orderer.example.com
+  orderer.trias.com:
+    container_name: orderer.trias.com
     image: hyperledger/fabric-orderer
     environment:
       - ORDERER_GENERAL_LOGLEVEL=debug
@@ -11,37 +14,45 @@ services:
       - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/orderer.genesis.block
       - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
       - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
-      # enabled TLS
       - ORDERER_GENERAL_TLS_ENABLED=false
       - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
       - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
       - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
-    working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+    working_dir: /home/Polarbear/workGo/src/github.com/hyperledger/fabric
     command: orderer
     volumes:
       - ./channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
-      - ./crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp:/var/hyperledger/orderer/msp
-      - ./crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/:/var/hyperledger/orderer/tls
+      - ./crypto-config/ordererOrganizations/trias.com/orderers/orderer.trias.com/msp:/var/hyperledger/orderer/msp
+      - ./crypto-config/ordererOrganizations/trias.com/orderers/orderer.trias.com/tls/:/var/hyperledger/orderer/tls
+      - /var/hyperledger/data/orderer0:/var/hyperledger/production/orderer
     ports:
       - 7050:7050
 
-  peer0.org1.example.com:
-    container_name: peer0.org1.example.com
+  couchdb0:
+    container_name: couchdb0
+    image: hyperledger/fabric-couchdb
+    environment:
+      - COUCHDB_USER=trias
+      - COUCHDB_PASSWORD=trias@Password
+    volumes:
+      - /var/hyperledger/data/couchdb0/_data:/opt/couchdb/data
+    ports:
+      - 5984:5984
+    #networks:
+      #- byfn
+
+  peer0.org1.trias.com:
+    container_name: peer0.org1.trias.com
     image: hyperledger/fabric-peer
     environment:
-      - CORE_PEER_ID=peer0.org1.example.com
-      - CORE_PEER_ADDRESS=peer0.org1.example.com:7051
-      - CORE_PEER_CHAINCODEADDRESS=peer0.org1.example.com:7052
+      - CORE_PEER_ID=peer0.org1.trias.com
+      - CORE_PEER_ADDRESS=peer0.org1.trias.com:7051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.org1.trias.com:7052
       - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
-      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org1.example.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org1.trias.com:7051
       - CORE_PEER_LOCALMSPID=Org1MSP
-  
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
-      # the following setting starts chaincode containers on the same
-      # bridge network as the peers
-      # https://docs.docker.com/compose/networking/
       - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=singlepeer_default
-      #- CORE_LOGGING_LEVEL=ERROR
       - CORE_LOGGING_LEVEL=DEBUG
       - CORE_PEER_TLS_ENABLED=false
       - CORE_PEER_GOSSIP_USELEADERELECTION=true
@@ -50,11 +61,16 @@ services:
       - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
       - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
       - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb0:5984
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=trias
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=trias@Password
     volumes:
         - /var/run/:/host/var/run/
-        - ./crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp:/etc/hyperledger/fabric/msp
-        - ./crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls:/etc/hyperledger/fabric/tls
-    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+        - ./crypto-config/peerOrganizations/org1.trias.com/peers/peer0.org1.trias.com/msp:/etc/hyperledger/fabric/msp
+        - ./crypto-config/peerOrganizations/org1.trias.com/peers/peer0.org1.trias.com/tls:/etc/hyperledger/fabric/tls
+        - /var/hyperledger/data/peer0:/var/hyperledger/production
+    working_dir: /home/Polarbear/workGo/src/github.com/hyperledger/fabric/peer
     command: peer node start
     ports:
       - 7051:7051
@@ -66,24 +82,23 @@ services:
     image: hyperledger/fabric-tools
     tty: true
     environment:
-      - GOPATH=/opt/gopath
+      - GOPATH=/home/Polarbear/workGo
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
       - CORE_LOGGING_LEVEL=DEBUG
       - CORE_PEER_ID=cli
-      - CORE_PEER_ADDRESS=peer0.org1.example.com:7051
+      - CORE_PEER_ADDRESS=peer0.org1.trias.com:7051
       - CORE_PEER_LOCALMSPID=Org1MSP
       - CORE_PEER_TLS_ENABLED=false
-      - CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/server.crt
-      - CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/server.key
-      - CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
-      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp
-    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+      - CORE_PEER_TLS_CERT_FILE=/home/Polarbear/workGo/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.trias.com/peers/peer0.org1.trias.com/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/home/Polarbear/workGo/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.trias.com/peers/peer0.org1.trias.com/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/home/Polarbear/workGo/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.trias.com/peers/peer0.org1.trias.com/tls/ca.crt
+      - CORE_PEER_MSPCONFIGPATH=/home/Polarbear/workGo/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.trias.com/users/Admin@org1.trias.com/msp
+    working_dir: /home/Polarbear/workGo/src/github.com/hyperledger/fabric/peer
     volumes:
         - /var/run/:/host/var/run/
-        #- ./chaincode/go/:/opt/gopath/src/github.com/hyperledger/fabric/singlepeer/chaincode/go
-        - /trias-contract/:/opt/gopath/src/github.com/hyperledger/fabric/singlepeer/chaincode/go
-        - ./crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
-        - ./channel-artifacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
+        - /trias-contract/contract/:/home/Polarbear/workGo/src/github.com/hyperledger/fabric/singlepeer/chaincode/go
+        - ./crypto-config:/home/Polarbear/workGo/src/github.com/hyperledger/fabric/peer/crypto/
+        - ./channel-artifacts:/home/Polarbear/workGo/src/github.com/hyperledger/fabric/peer/channel-artifacts
     depends_on:
-      - orderer.example.com
-      - peer0.org1.example.com
+      - orderer.trias.com
+      - peer0.org1.trias.com
