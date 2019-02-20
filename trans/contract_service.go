@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"golang.org/x/net/context"
 	"strings"
-	enConf "tvm-light/config"
+	t_conf "tvm-light/config"
 	"tvm-light/contract"
 	"tvm-light/proto/tm"
 	t_utils "tvm-light/utils"
@@ -17,51 +17,61 @@ func NewContractService() *contractServer {
 }
 
 const (
-	fileSuffix = ".go"
-	error_code = -1
-	error_not_install = -100
+	fileSuffix           = ".go"
+	error_code           = -1
+	error_not_install    = -100
+	dbname_separator     = "_"
+	peer_chain_code_path = "peer0/chaincodes/"
 )
 
 type contractServer struct {
 }
 
 func (serv *contractServer) ExecuteContract(ctx context.Context, request *tm.ExecuteContractRequest) (*tm.ExecuteContractResponse) {
-	// TODO validate
 	isCorect, err := validate.RequestValidate(request);
 	if !isCorect || err != nil {
 		fmt.Println("Contract validate fails", err);
-		return returnErrorResponse(err,error_code);
+		return returnErrorResponse(err, error_code);
 	}
-	// TODO CheckContract is install
-	var filePath = enConf.GetContractPath() + "/" + request.GetUser() + "/" + request.GetAddress() + "/"+ request.GetContractName() + "/";
+	var filePath = t_conf.TriasConfig.ContractPath + "/" + request.GetUser() + "/" + request.GetAddress() + "/" + request.GetContractName() + "/";
 	var fileName = request.GetContractName() + fileSuffix;
 	isExists, err := t_utils.PathExists(filePath + fileName);
 	if err != nil {
 		fmt.Println("checkFilePathFails", err);
-		return returnErrorResponse(err,error_code);
+		return returnErrorResponse(err, error_code);
 	}
-	contract := contract.NewContract(enConf.GetOrderServer(), request.GetContractName(), request.GetContractType(), filePath, request.GetContractVersion(), enConf.GetChannelID(), enConf.GetOrdererOrgName(), request.GetCommand(), request.GetOperation());
+	cont := contract.NewContract(t_conf.TriasConfig.OrderServer, request.GetContractName(), request.GetContractType(), filePath, request.GetContractVersion(), t_conf.TriasConfig.ChannelID, t_conf.TriasConfig.OrdererOrgName, request.GetCommand(), request.GetOperation())
 	if !isExists {
-		if strings.EqualFold(request.GetOperation(),"install"){
-			err := t_utils.FileDownLoad(filePath, fileName, enConf.GetIPFSAddress()+request.GetAddress());
+		if strings.EqualFold(request.GetOperation(), "install") {
+			err := t_utils.FileDownLoad(filePath, fileName, t_conf.TriasConfig.IPFSAddress+request.GetAddress());
 			if err != nil {
 				fmt.Println("Download contract happens a error", err);
-				return returnErrorResponse(err,error_code);
+				return returnErrorResponse(err, error_code);
 			}
 		} else {
-			return returnErrorResponse(errors.New("Contract hasn't been installed"),error_not_install);
+			dbName := t_utils.GetCouchDBName(t_conf.TriasConfig.ChannelID + dbname_separator + request.ContractName)
+			dbExists := t_utils.CheckCouchDBExists(dbName)
+			if !dbExists {
+				return returnErrorResponse(errors.New("Contract hasn't been installed"), error_not_install);
+			} else {
+				err := t_utils.FileDownLoad(filePath, fileName, t_conf.TriasConfig.IPFSAddress+request.GetAddress());
+				if err != nil {
+					fmt.Println("Download contract happens a error", err);
+					return returnErrorResponse(err, error_code);
+				}
+			}
 		}
 	}
 	if _, err := t_utils.CheckFileMD5(filePath+fileName, request.GetCheckMD5()); err != nil {
-		return returnErrorResponse(err,error_code);
+		return returnErrorResponse(err, error_code);
 	}
-	cresp, err := contract.RunContract()
+	cresp, err := cont.RunContract()
 	if err != nil {
 		fmt.Println("Failed to run contract", err);
-		return returnErrorResponse(err,error_code);
+		return returnErrorResponse(err, error_code);
 	}
 
-	if strings.HasSuffix(cresp,"\n") {
+	if strings.HasSuffix(cresp, "\n") {
 		cresp = cresp[:len(cresp)-1]
 	}
 
@@ -74,7 +84,7 @@ func (serv *contractServer) ExecuteContract(ctx context.Context, request *tm.Exe
 	return resp;
 }
 
-func returnErrorResponse(err error,code int32) (*tm.ExecuteContractResponse) {
+func returnErrorResponse(err error, code int32) (*tm.ExecuteContractResponse) {
 	resp := &tm.ExecuteContractResponse{
 		Code:    code,
 		Data:    err.Error(),

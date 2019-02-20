@@ -23,6 +23,9 @@ dataPath: /var/hyperledger/data/
 
 packagePath: /trias-contract/backup/
 
-couchdbPort: 5984
 
-couchdbPath: /var/hyperledger/data/couchdb0/_data/
+couchdbInfo:
+  port: 5984
+  path: /var/hyperledger/data/couchdb0/_data/
+  username: trias
+  password: trias@Password

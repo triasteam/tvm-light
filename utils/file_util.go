@@ -181,6 +181,11 @@ func ModifyPathUserGroup(path string,uid int,gid int) error {
 	return nil
 }
 
+func FileExist(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil || os.IsExist(err)
+}
+
 func modifyUserGroup(file *os.File,uid int,gid int) error {
 	info, err := file.Stat()
 	if err != nil {

@@ -66,7 +66,7 @@ func (s *consensusServer) AsyncTVM(ctx context.Context, request *AsyncTVMRequest
 		return createErrorCommonResponse(err, -1)
 	}
 	// chown 5984.5984
-	if err := t_utils.ModifyPathUserGroup(t_conf.TriasConfig.CouchdbPath,t_conf.TriasConfig.CouchdbPort,t_conf.TriasConfig.CouchdbPort); err != nil {
+	if err := t_utils.ModifyPathUserGroup(t_conf.TriasConfig.CouchdbInfo.Path,t_conf.TriasConfig.CouchdbInfo.Port,t_conf.TriasConfig.CouchdbInfo.Port); err != nil {
 		return createErrorCommonResponse(err, -1)
 	}
 	// start docker-compose
