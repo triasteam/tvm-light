@@ -55,14 +55,13 @@ func (c *Contract) RunContract() (string, error) {
 }
 
 func (c *Contract) InstallContract() (string,error) {
-	var filePath string = tvm_conf.GetDockerPath() + c.contractPath[len(tvm_conf.GetContractPath()):];
-	fmt.Println("dockerPath:",tvm_conf.GetDockerPath())
+	var filePath string = tvm_conf.TriasConfig.DockerPath + c.contractPath[len(tvm_conf.TriasConfig.ContractPath):];
 	params := []string{"peer", "chaincode", "install", "-n", c.contractName, "-p", filePath, "-v", c.contractVersion};
 	return runCommand(params);
 }
 
 func (c *Contract) instantiate() (string, error) {
-	params := []string{"peer", "chaincode", "instantiate", "-o", tvm_conf.GetOrderServer(), "-C", c.channelID, "-n", c.contractName, "-v", c.contractVersion, "-c", c.args};
+	params := []string{"peer", "chaincode", "instantiate", "-o", tvm_conf.TriasConfig.OrderServer, "-C", c.channelID, "-n", c.contractName, "-v", c.contractVersion, "-c", c.args};
 	return runCommand(params);
 }
 

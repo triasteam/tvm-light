@@ -31,25 +31,12 @@ type CouchDB struct {
 var TriasConfig = TVMconf{}
 
 func init() {
-	var filePath = "/opt/gopath/src/tvm-light/config.yml"
+	var filePath = "config.yml"
 	data, _ := ioutil.ReadFile(filePath)
 	yaml.Unmarshal(data, &TriasConfig)
 }
 
-func GetOrderServer() string {
-	return TriasConfig.OrderServer;
-}
-func GetContractPath() string {
-	return TriasConfig.ContractPath;
-}
 
-func GetChannelID() string {
-	return TriasConfig.ChannelID;
-}
-
-func GetDockerPath() string {
-	return TriasConfig.DockerPath
-}
 
 func GetPort() string {
 	return TriasConfig.Port
