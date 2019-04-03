@@ -16,7 +16,7 @@ ipfsAPIAddress: 127.0.0.1:5001
 
 goPath: /opt/gopath/
 
-conposeFilePath: src/github.com/hyperledger/fabric/singlepeer/docker-compose-cli.yaml
+composeFilePath: src/github.com/hyperledger/fabric/singlepeer/docker-compose-cli.yaml
 
 #don't change this
 dataPath: /var/hyperledger/data/

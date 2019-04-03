@@ -69,10 +69,9 @@ func (serv *contractServer) ExecuteContract(ctx context.Context, request *tm.Exe
 	if err != nil {
 		fmt.Println("Failed to run contract", err);
 		return returnErrorResponse(err, error_code);
-	}
-
-	if strings.HasSuffix(cresp, "\n") {
-		cresp = cresp[:len(cresp)-1]
+	} else {
+		c_hash := calculateHash(request)
+		contract.UpdateCurrentHash(t_conf.BasicHashKey, c_hash)
 	}
 
 	resp := &tm.ExecuteContractResponse{
@@ -93,11 +92,8 @@ func returnErrorResponse(err error, code int32) (*tm.ExecuteContractResponse) {
 	return resp;
 }
 
-func returnSuccessResponse(data string) (*tm.ExecuteContractResponse) {
-	resp := &tm.ExecuteContractResponse{
-		Code:    1,
-		Data:    data,
-		Message: "success",
-	}
-	return resp;
+func calculateHash(request *tm.ExecuteContractRequest) string {
+	var message string = string(request.GetContractName() + request.GetUser() + request.GetOperation() + string(request.GetTimestamp()) + request.GetCheckMD5());
+	return message;
 }
+

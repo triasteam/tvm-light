@@ -46,10 +46,29 @@ func asyncTVM(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+func getCurrentHash(writer http.ResponseWriter, request *http.Request) {
+	server := t_server.NewConsensusService()
+	response := server.GetCurrentHash()
+	if err := json.NewEncoder(writer).Encode(response); err != nil {
+		fmt.Println(err)
+	}
+}
+
+func getCurrentDataAddress(writer http.ResponseWriter, request *http.Request) {
+	server := t_server.NewConsensusService()
+	response := server.GetCurrentDataAddress()
+	if err := json.NewEncoder(writer).Encode(response); err != nil {
+		fmt.Println(err)
+	}
+}
+
+
 func main() {
 	http.HandleFunc("/executeContract", executeContract)
 	http.HandleFunc("/upLoadPackage", upLoadPackage)
 	http.HandleFunc("/asyncTVM", asyncTVM)
+	http.HandleFunc("/getCurrentHash", getCurrentHash)
+	http.HandleFunc("/getCurrentDataAddress", getCurrentDataAddress)
 	fmt.Println(t_conf.TriasConfig.Port)
 	err := http.ListenAndServe("0.0.0.0:"+t_conf.TriasConfig.Port, nil)
 	if err != nil {

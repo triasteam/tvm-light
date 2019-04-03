@@ -15,14 +15,14 @@ type TVMconf struct {
 	Port            string  `yaml:"port"`
 	IpfsAPIAddress  string  `yaml:"ipfsAPIAddress"`
 	GOPATH          string  `yaml:"goPath"`
-	ComposeFilePath string  `yaml:"conposeFilePath"`
+	ComposeFilePath string  `yaml:"composeFilePath"`
 	DataPath        string  `yaml:"dataPath"`
 	PackagePath     string  `yaml:"packagePath"`
 	CouchdbInfo     CouchDB `yaml:"couchdbInfo"`
 }
 
 type CouchDB struct {
-	Port     int `yaml:"port"`
+	Port     int    `yaml:"port"`
 	Path     string `yaml:"path"`
 	Username string `yaml:"username"`
 	Password string `yaml:"password"`
@@ -30,14 +30,17 @@ type CouchDB struct {
 
 var TriasConfig = TVMconf{}
 
+const (
+	BasicContractName    = "basic_trias"
+	BasicContractVersion = "v1.0"
+	BasicContractPath    = "github.com/hyperledger/fabric/singlepeer/chaincode/go/trias/QmXQcMK4ViD3K8rXw1Y3LEA5KArRT7QMiDLVbmgGZmQz2K/basic_trias"
+	Secret               = "r*0US%oGe%3G$!fc"
+	BasicHashKey         = "triasHash"
+	BasicIpfsKey         = "ipfsHash"
+)
+
 func init() {
 	var filePath = "config.yml"
 	data, _ := ioutil.ReadFile(filePath)
 	yaml.Unmarshal(data, &TriasConfig)
-}
-
-
-
-func GetPort() string {
-	return TriasConfig.Port
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"golang.org/x/net/context"
 	"os"
+	"tvm-light/contract"
 	t_conf "tvm-light/config"
 	t_utils "tvm-light/utils"
 )
@@ -43,6 +44,8 @@ func (s *consensusServer) UploadData() *t_conf.CommonResponse {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return createErrorCommonResponse(err, -1)
+	} else {
+		contract.UpdateCurrentIpfsAddress(t_conf.BasicIpfsKey, hash)
 	}
 	return createSuccessCommonResponse(string(jsonData))
 }
@@ -75,6 +78,18 @@ func (s *consensusServer) AsyncTVM(ctx context.Context, request *AsyncTVMRequest
 	}
 	return createSuccessCommonResponse("")
 }
+
+
+func (s *consensusServer) GetCurrentHash() *t_conf.CommonResponse {
+	value := contract.GetCurrentHash(t_conf.BasicHashKey)
+	return createSuccessCommonResponse(value)
+}
+
+func (s *consensusServer) GetCurrentDataAddress() *t_conf.CommonResponse {
+	value := contract.GetCurrentHash(t_conf.BasicIpfsKey)
+	return createSuccessCommonResponse(value)
+}
+
 
 func createErrorCommonResponse(err error, code int32) *t_conf.CommonResponse {
 	resp := &t_conf.CommonResponse{
