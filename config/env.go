@@ -32,8 +32,6 @@ var TriasConfig = TVMconf{}
 
 const (
 	BasicContractName    = "basic_trias"
-	BasicContractVersion = "v1.0"
-	BasicContractPath    = "github.com/hyperledger/fabric/singlepeer/chaincode/go/trias/QmXQcMK4ViD3K8rXw1Y3LEA5KArRT7QMiDLVbmgGZmQz2K/basic_trias"
 	Secret               = "r*0US%oGe%3G$!fc"
 	BasicHashKey         = "triasHash"
 	BasicIpfsKey         = "ipfsHash"

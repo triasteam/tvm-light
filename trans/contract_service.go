@@ -21,7 +21,6 @@ const (
 	error_code           = -1
 	error_not_install    = -100
 	dbname_separator     = "_"
-	peer_chain_code_path = "peer0/chaincodes/"
 )
 
 type contractServer struct {
